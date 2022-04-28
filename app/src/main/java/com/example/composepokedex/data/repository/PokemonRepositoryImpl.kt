@@ -7,6 +7,7 @@ import com.example.composepokedex.util.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
+import java.net.ConnectException
 import javax.inject.Inject
 
 class PokemonRepositoryImpl @Inject constructor(
@@ -22,6 +23,10 @@ class PokemonRepositoryImpl @Inject constructor(
             }
             catch (e: HttpException){
                 emit(Resource.Error("Failed to get data"))
+                return@flow
+            }
+            catch (e: ConnectException){
+                emit(Resource.Error("Connection failed"))
                 return@flow
             }
         }

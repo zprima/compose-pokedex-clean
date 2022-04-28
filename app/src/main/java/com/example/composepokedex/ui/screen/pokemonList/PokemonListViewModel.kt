@@ -28,15 +28,21 @@ class PokemonListViewModel @Inject constructor(
                     is Resource.Success -> {
                         result.data?.let {
                             uiState = uiState.copy(
+                                isLoading = false,
                                 pokemonList = it
                             )
                         }
                     }
                     is Resource.Error -> {
+                        uiState = uiState.copy(
+                            isLoading = false,
 
+                        )
                     }
                     is Resource.Loading -> {
-
+                        uiState = uiState.copy(
+                            isLoading = true
+                        )
                     }
                 }
             }
