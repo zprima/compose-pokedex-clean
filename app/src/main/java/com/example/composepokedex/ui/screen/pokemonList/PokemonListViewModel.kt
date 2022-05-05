@@ -5,47 +5,32 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.map
 import com.example.composepokedex.domain.model.PokemonList
+import com.example.composepokedex.domain.repository.PokemonRepository
 import com.example.composepokedex.domain.useCase.FetchPokemonListUseCase
 import com.example.composepokedex.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class PokemonListViewModel @Inject constructor(
-    private val fetchPokemonListUseCase: FetchPokemonListUseCase
+    private val pokemonRepository: PokemonRepository
 ): ViewModel() {
     var uiState: PokemonListUiState by mutableStateOf(PokemonListUiState())
         private set
 
-    init {
-        viewModelScope.launch {
-            fetchPokemonListUseCase.invoke().collectLatest { result ->
-                when(result){
-                    is Resource.Success -> {
-                        result.data?.let {
-                            uiState = uiState.copy(
-                                isLoading = false,
-                                pokemonList = it
-                            )
-                        }
-                    }
-                    is Resource.Error -> {
-                        uiState = uiState.copy(
-                            isLoading = false,
+    val getPokemon = pokemonRepository.fetchAllPokemons()
 
-                        )
-                    }
-                    is Resource.Loading -> {
-                        uiState = uiState.copy(
-                            isLoading = true
-                        )
-                    }
-                }
-            }
-        }
-    }
+//    init {
+//        viewModelScope.launch {
+//            pokemonRepository.fetchAllPokemons().collect {
+//                uiState = uiState.copy(pokemonList = listOf(it.map { it -> it }))
+//            }
+//        }
+//    }
 }

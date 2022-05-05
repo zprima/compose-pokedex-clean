@@ -13,7 +13,7 @@ class FetchPokemonListUseCase(
     private val pokemonRepository: PokemonRepository,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
-    suspend operator fun invoke() = withContext(defaultDispatcher) {
-        pokemonRepository.fetchPokemons(0)
-    }
+//    suspend operator fun invoke() = withContext(defaultDispatcher) {
+//        pokemonRepository.fetchPokemons(0)
+//    }
 }

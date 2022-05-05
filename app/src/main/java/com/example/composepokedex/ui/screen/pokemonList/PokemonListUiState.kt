@@ -4,7 +4,7 @@ import com.example.composepokedex.domain.model.Pokemon
 import com.example.composepokedex.domain.model.PokemonList
 
 data class PokemonListUiState(
-    val pokemonList: List<PokemonList> = listOf(),
+    val pokemonList: List<Pokemon> = listOf(),
     val page: Int = 0,
     val isLoading:Boolean = false
 )
