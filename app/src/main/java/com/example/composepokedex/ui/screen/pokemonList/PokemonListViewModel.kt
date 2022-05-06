@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import androidx.paging.map
 import com.example.composepokedex.domain.model.PokemonList
 import com.example.composepokedex.domain.repository.PokemonRepository
@@ -21,10 +22,14 @@ import javax.inject.Inject
 class PokemonListViewModel @Inject constructor(
     private val pokemonRepository: PokemonRepository
 ): ViewModel() {
-    var uiState: PokemonListUiState by mutableStateOf(PokemonListUiState())
+    var uiState: PokemonListUiState by mutableStateOf(
+        PokemonListUiState(
+            pokemonList = pokemonRepository.fetchAllPokemons().cachedIn(viewModelScope)
+        )
+    )
         private set
 
-    val getPokemon = pokemonRepository.fetchAllPokemons()
+//    val getPokemon = pokemonRepository.fetchAllPokemons().cachedIn(viewModelScope)
 
 //    init {
 //        viewModelScope.launch {
@@ -33,4 +38,5 @@ class PokemonListViewModel @Inject constructor(
 //            }
 //        }
 //    }
+
 }

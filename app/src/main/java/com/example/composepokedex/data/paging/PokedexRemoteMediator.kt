@@ -1,5 +1,6 @@
 package com.example.composepokedex.data.paging
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
@@ -31,7 +32,12 @@ class PokedexRemoteMediator @Inject constructor(
         return try {
             val currentPage:Int = when(loadType){
                 LoadType.REFRESH -> {
-                    0
+                    val lastPokemon = pokemonDao.getLastPokemon()
+                    if(lastPokemon == null){
+                        0
+                    } else {
+                        -1
+                    }
                 }
                 LoadType.PREPEND -> {
                     val firstItem = state.firstItemOrNull()
@@ -52,11 +58,23 @@ class PokedexRemoteMediator @Inject constructor(
                         return MediatorResult.Success(endOfPaginationReached = true)
                     }
 
-                    floor(lastItem.number / 20.0).toInt()
+                    val pokemonEntity = pokemonDao.find(lastItem.id!!)
+                    Log.d("APP", "lastItem.id is ${lastItem.id}, and pkm entity is ${pokemonEntity}")
+                    if(pokemonEntity == null){
+                        floor(lastItem.number / 20.0).toInt()
+                    } else {
+                        floor(pokemonEntity.number / 20.0).toInt()
+                    }
                 }
             }
 
+            if(currentPage == -1){
+                Log.d("APP", "current page is $currentPage")
+                return MediatorResult.Success(endOfPaginationReached = false)
+            }
+
             val nextPage = if(currentPage == 0) 0 else { currentPage * 20 }
+            Log.d("APP", "Current: $currentPage, Next: $nextPage")
 
             val response = pokedexApi.fetchPokemons(
                 offset = nextPage,
@@ -74,10 +92,13 @@ class PokedexRemoteMediator @Inject constructor(
             }
 
             pokedexDatabase.withTransaction {
-                if(loadType == LoadType.REFRESH){
-                    pokemonDao.destroyAll()
-                }
+//                if(loadType == LoadType.REFRESH){
+//                    Log.d("APP", "DESTROY ALL POKEMON IN DB!!!!")
+//                    pokemonDao.destroyAll()
+//                }
 
+                Log.d("APP", "inserting pokemon, loadtype is ${loadType}")
+                Log.d("APP", "numbers of inserts are ${pokemonList.map { it.number }}")
                 pokemonDao.insertAllPokemon(pokemonList)
             }
 

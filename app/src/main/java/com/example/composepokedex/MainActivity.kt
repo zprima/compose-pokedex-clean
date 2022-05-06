@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             ComposePokedexTheme {
-                NavHost(navController = navController, startDestination = Screen.Loading.route) {
+                NavHost(navController = navController, startDestination = Screen.PokemonList.route) {
                     composable(Screen.Loading.route) { LoadingScreen(navController) }
                     composable(Screen.PokemonList.route) { PokemonListScreen(navController) }
                 }

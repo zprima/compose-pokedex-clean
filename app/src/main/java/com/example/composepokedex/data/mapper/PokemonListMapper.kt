@@ -39,7 +39,7 @@ fun PokedexPokemonResponseDto.toPokemonEntity(): PokemonEntity{
         number = id!!,
         name = name!!,
         imageUrl = sprites?.other?.officialArtwork?.frontDefault!!,
-        types = types!!.joinToString("'") { it.type?.name!! }
+        types = types!!.joinToString(",") { it.type?.name!! }
     )
 }
 
@@ -49,6 +49,6 @@ fun Pokemon.toPokemonEntity(): PokemonEntity{
         number = number,
         name = name,
         imageUrl = officialArtWorkUrl,
-        types = types.joinToString("'")
+        types = types.joinToString(",")
     )
 }

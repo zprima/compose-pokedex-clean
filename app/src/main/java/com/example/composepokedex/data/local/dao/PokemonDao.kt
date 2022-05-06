@@ -24,4 +24,10 @@ interface PokemonDao{
 
     @Query("DELETE FROM pokemonentity")
     suspend fun destroyAll()
+
+    @Query("SELECT * from pokemonentity ORDER BY id DESC LIMIT 1")
+    suspend fun getLastPokemon(): PokemonEntity?
+
+    @Query("SELECT * FROM pokemonentity WHERE id = :id")
+    suspend fun find(id: Int): PokemonEntity?
 }

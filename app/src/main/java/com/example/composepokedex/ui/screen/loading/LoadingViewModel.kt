@@ -10,6 +10,7 @@ import com.example.composepokedex.domain.repository.PokemonRepository
 import com.example.composepokedex.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,11 +26,6 @@ class LoadingViewModel @Inject constructor(
     }
 
     fun getPokemon(){
-        viewModelScope.launch {
-            pokemonRepository.fetchAllPokemons().collect {
-                loaded = true
-                return@collect
-            }
-        }
+
     }
 }
