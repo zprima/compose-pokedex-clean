@@ -136,7 +136,7 @@ fun PokemonItemInfo(pokemon: Pokemon){
             Text(
                 name,
                 fontSize = 24.sp,
-                color = Color.White
+                color = Color.Black
             )
             Spacer(Modifier.height(4.dp))
             PokemonTypeRow(types = pokemon.types)

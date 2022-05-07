@@ -1,5 +1,6 @@
 package com.example.composepokedex.data.paging
 
+import android.icu.util.TimeUnit
 import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
@@ -8,11 +9,8 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.example.composepokedex.data.local.PokedexDatabase
 import com.example.composepokedex.data.local.entity.PokemonEntity
-import com.example.composepokedex.data.mapper.toPokemon
 import com.example.composepokedex.data.mapper.toPokemonEntity
-import com.example.composepokedex.data.mapper.toPokemonList
 import com.example.composepokedex.data.remote.PokedexApi
-import com.example.composepokedex.domain.model.Pokemon
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
@@ -25,6 +23,15 @@ class PokedexRemoteMediator @Inject constructor(
 ): RemoteMediator<Int, PokemonEntity>() {
     private val pokemonDao = pokedexDatabase.pokemonDao
 
+    override suspend fun initialize(): InitializeAction {
+        val pokemonEntity = pokemonDao.getLastPokemon()
+        return if(pokemonEntity != null) {
+            InitializeAction.SKIP_INITIAL_REFRESH
+        } else {
+            InitializeAction.LAUNCH_INITIAL_REFRESH
+        }
+    }
+
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, PokemonEntity>
@@ -32,45 +39,22 @@ class PokedexRemoteMediator @Inject constructor(
         return try {
             val currentPage:Int = when(loadType){
                 LoadType.REFRESH -> {
-                    val lastPokemon = pokemonDao.getLastPokemon()
-                    if(lastPokemon == null){
-                        0
-                    } else {
-                        -1
-                    }
+                    0
                 }
                 LoadType.PREPEND -> {
-                    val firstItem = state.firstItemOrNull()
-                    if(firstItem == null){
-                        return MediatorResult.Success(endOfPaginationReached = true)
-                    }
-
-                    val page = floor(firstItem.number / 20.0)
-                    if(page == 0.0){
-                        return MediatorResult.Success(endOfPaginationReached = true)
-                    }
-
-                    page.toInt()
+                    return MediatorResult.Success(endOfPaginationReached = true)
                 }
                 LoadType.APPEND -> {
-                    val lastItem = state.lastItemOrNull()
-                    if(lastItem == null){
-                        return MediatorResult.Success(endOfPaginationReached = true)
+                    val lastPokemonEntity = pokedexDatabase.withTransaction {
+                        pokemonDao.getLastPokemon()
                     }
 
-                    val pokemonEntity = pokemonDao.find(lastItem.id!!)
-                    Log.d("APP", "lastItem.id is ${lastItem.id}, and pkm entity is ${pokemonEntity}")
-                    if(pokemonEntity == null){
-                        floor(lastItem.number / 20.0).toInt()
+                    if (lastPokemonEntity == null) {
+                        0
                     } else {
-                        floor(pokemonEntity.number / 20.0).toInt()
+                        floor(lastPokemonEntity.number / 20.0).toInt()
                     }
                 }
-            }
-
-            if(currentPage == -1){
-                Log.d("APP", "current page is $currentPage")
-                return MediatorResult.Success(endOfPaginationReached = false)
             }
 
             val nextPage = if(currentPage == 0) 0 else { currentPage * 20 }
@@ -81,10 +65,6 @@ class PokedexRemoteMediator @Inject constructor(
                 limit = 20
             )
 
-            val endOfPaginationReached = response.next.isNullOrEmpty()
-//            val previousPage = if(currentPage == 0) null else currentPage - 1
-//            val nextPage = if(endOfPaginationReached) null else currentPage + 1
-
             val pokemonList = mutableListOf<PokemonEntity>()
             response.results?.forEach {
                 val pokemonResponseDto = pokedexApi.fetchPokemon(it.name!!)
@@ -92,16 +72,17 @@ class PokedexRemoteMediator @Inject constructor(
             }
 
             pokedexDatabase.withTransaction {
-//                if(loadType == LoadType.REFRESH){
-//                    Log.d("APP", "DESTROY ALL POKEMON IN DB!!!!")
-//                    pokemonDao.destroyAll()
-//                }
+                if(loadType == LoadType.REFRESH){
+                    Log.d("APP", "DESTROY ALL POKEMON IN DB!!!!")
+                    pokemonDao.destroyAll()
+                }
 
                 Log.d("APP", "inserting pokemon, loadtype is ${loadType}")
                 Log.d("APP", "numbers of inserts are ${pokemonList.map { it.number }}")
                 pokemonDao.insertAllPokemon(pokemonList)
             }
 
+            val endOfPaginationReached = response.next.isNullOrEmpty()
             return MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
         } catch (e: IOException) {
             MediatorResult.Error(e)

@@ -16,9 +16,6 @@ interface PokemonDao{
         pokemonList: List<PokemonEntity>
     )
 
-//    @Query("SELECT * from pokemonentity LIMIT 20 OFFSET :offset * 20")
-//    suspend fun fetchPokemon(offset: Int): List<PokemonEntity>
-
     @Query("SELECT * from pokemonentity")
     fun fetchPokemon(): PagingSource<Int, PokemonEntity>
 
